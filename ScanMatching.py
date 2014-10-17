@@ -233,11 +233,21 @@ def getB(match):
                    [getB2(match)],
                    [getB3(match)]])
 
+def floatMatrixToDecimal(mat):
+  M = [[[Decimal(0), Decimal(0), Decimal(0)] for i in range(len(mat[0]))] for j in range(len(mat))]
+
+  for i in range(len(mat)):
+    for j in range(len(mat[0])):
+      M[i][j] = Decimal(mat[i][j])
+
+  return M
+
 def getQmin(match):
   A = getA(match)
   B = getB(match)
-  #A = np.linalg.matrix_power(A, -1)
+  A = np.linalg.matrix_power(A, -1)
   A = -A
+  A = floatMatrixToDecimal(A)
 
   return np.dot(A, B)
 
