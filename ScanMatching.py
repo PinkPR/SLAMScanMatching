@@ -1,5 +1,6 @@
 import math
 from decimal import *
+from bigfloat import *
 import numpy as np
 import Ransac
 import Trigo
@@ -19,8 +20,8 @@ def norma((x, y)):
 def radmod(angle):
   return math.fmod(2 * PI + math.fmod(angle, 2 * PI), 2 * PI)
 
-def radmodDecimal(angle):
-  return (Decimal(2 * PI) + (angle % Decimal(2 * PI))) % Decimal(2 * PI)
+def radmodBigFloat(angle):
+  return (BigFloat(2 * PI) + (angle % BigFloat(2 * PI))) % BigFloat(2 * PI)
 
 def isOnSegment(C, (A, B)):
   AC = vector(A, C)
@@ -89,14 +90,14 @@ def applyQList(points, (x, y, theta)):
     points[i] = applyQ(points[i], (x, y, theta))
 
 def getA11(match):
-  res = Decimal(0)
-  k = Decimal(0)
+  res = BigFloat(0)
+  k = BigFloat(0)
 
   for i in range(len(match)):
-    pix = Decimal(match[i][1][0])
-    piy = Decimal(match[i][1][1])
-    cix = Decimal(match[i][0][0])
-    ciy = Decimal(match[i][0][1])
+    pix = BigFloat(match[i][1][0])
+    piy = BigFloat(match[i][1][1])
+    cix = BigFloat(match[i][0][0])
+    ciy = BigFloat(match[i][0][1])
     ki  = pix ** 2 + piy ** 2 + L ** 2
 
     res = res + (1 - piy ** 2 / ki)
@@ -104,14 +105,14 @@ def getA11(match):
   return res
 
 def getA12(match):
-  res = Decimal(0)
-  k = Decimal(0)
+  res = BigFloat(0)
+  k = BigFloat(0)
 
   for i in range(len(match)):
-    pix = Decimal(match[i][1][0])
-    piy = Decimal(match[i][1][1])
-    cix = Decimal(match[i][0][0])
-    ciy = Decimal(match[i][0][1])
+    pix = BigFloat(match[i][1][0])
+    piy = BigFloat(match[i][1][1])
+    cix = BigFloat(match[i][0][0])
+    ciy = BigFloat(match[i][0][1])
     ki  = pix ** 2 + piy ** 2 + L ** 2
 
     res = res + (pix * piy / ki)
@@ -119,14 +120,14 @@ def getA12(match):
   return res
 
 def getA13(match):
-  res = Decimal(0)
-  k = Decimal(0)
+  res = BigFloat(0)
+  k = BigFloat(0)
 
   for i in range(len(match)):
-    pix = Decimal(match[i][1][0])
-    piy = Decimal(match[i][1][1])
-    cix = Decimal(match[i][0][0])
-    ciy = Decimal(match[i][0][1])
+    pix = BigFloat(match[i][1][0])
+    piy = BigFloat(match[i][1][1])
+    cix = BigFloat(match[i][0][0])
+    ciy = BigFloat(match[i][0][1])
     ki  = pix ** 2 + piy ** 2 + L ** 2
 
     res = res + (-ciy + (cix * pix + ciy * piy) * piy / ki)
@@ -134,14 +135,14 @@ def getA13(match):
   return res
 
 def getA22(match):
-  res = Decimal(0)
-  k = Decimal(0)
+  res = BigFloat(0)
+  k = BigFloat(0)
 
   for i in range(len(match)):
-    pix = Decimal(match[i][1][0])
-    piy = Decimal(match[i][1][1])
-    cix = Decimal(match[i][0][0])
-    ciy = Decimal(match[i][0][1])
+    pix = BigFloat(match[i][1][0])
+    piy = BigFloat(match[i][1][1])
+    cix = BigFloat(match[i][0][0])
+    ciy = BigFloat(match[i][0][1])
     ki  = pix ** 2 + piy ** 2 + L ** 2
 
     res = res + (1 - pix ** 2 / ki)
@@ -149,14 +150,14 @@ def getA22(match):
   return res
 
 def getA23(match):
-  res = Decimal(0)
-  k = Decimal(0)
+  res = BigFloat(0)
+  k = BigFloat(0)
 
   for i in range(len(match)):
-    pix = Decimal(match[i][1][0])
-    piy = Decimal(match[i][1][1])
-    cix = Decimal(match[i][0][0])
-    ciy = Decimal(match[i][0][1])
+    pix = BigFloat(match[i][1][0])
+    piy = BigFloat(match[i][1][1])
+    cix = BigFloat(match[i][0][0])
+    ciy = BigFloat(match[i][0][1])
     ki  = pix ** 2 + piy ** 2 + L ** 2
 
     res = res + (cix - (cix * pix + ciy * piy) * pix / ki)
@@ -164,14 +165,14 @@ def getA23(match):
   return res
 
 def getA33(match):
-  res = Decimal(0)
-  k = Decimal(0)
+  res = BigFloat(0)
+  k = BigFloat(0)
 
   for i in range(len(match)):
-    pix = Decimal(match[i][1][0])
-    piy = Decimal(match[i][1][1])
-    cix = Decimal(match[i][0][0])
-    ciy = Decimal(match[i][0][1])
+    pix = BigFloat(match[i][1][0])
+    piy = BigFloat(match[i][1][1])
+    cix = BigFloat(match[i][0][0])
+    ciy = BigFloat(match[i][0][1])
     ki  = pix ** 2 + piy ** 2 + L ** 2
 
     res = res + (cix ** 2 + ciy ** 2 - ((cix * pix + ciy * piy) ** 2) / ki)
@@ -179,14 +180,14 @@ def getA33(match):
   return res
 
 def getB1(match):
-  res = Decimal(0)
-  k = Decimal(0)
+  res = BigFloat(0)
+  k = BigFloat(0)
 
   for i in range(len(match)):
-    pix = Decimal(match[i][1][0])
-    piy = Decimal(match[i][1][1])
-    cix = Decimal(match[i][0][0])
-    ciy = Decimal(match[i][0][1])
+    pix = BigFloat(match[i][1][0])
+    piy = BigFloat(match[i][1][1])
+    cix = BigFloat(match[i][0][0])
+    ciy = BigFloat(match[i][0][1])
     ki  = pix ** 2 + piy ** 2 + L ** 2
 
     res = res + (cix - pix - (cix * piy - ciy * pix) * piy / ki)
@@ -194,14 +195,14 @@ def getB1(match):
   return res
 
 def getB2(match):
-  res = Decimal(0)
-  k = Decimal(0)
+  res = BigFloat(0)
+  k = BigFloat(0)
 
   for i in range(len(match)):
-    pix = Decimal(match[i][1][0])
-    piy = Decimal(match[i][1][1])
-    cix = Decimal(match[i][0][0])
-    ciy = Decimal(match[i][0][1])
+    pix = BigFloat(match[i][1][0])
+    piy = BigFloat(match[i][1][1])
+    cix = BigFloat(match[i][0][0])
+    ciy = BigFloat(match[i][0][1])
     ki  = pix ** 2 + piy ** 2 + L ** 2
 
     res = res + (ciy - piy - (cix * piy - ciy * pix) * pix / ki)
@@ -209,19 +210,49 @@ def getB2(match):
   return res
 
 def getB3(match):
-  res = Decimal(0)
-  k = Decimal(0)
+  res = BigFloat(0)
+  k = BigFloat(0)
 
   for i in range(len(match)):
-    pix = Decimal(match[i][1][0])
-    piy = Decimal(match[i][1][1])
-    cix = Decimal(match[i][0][0])
-    ciy = Decimal(match[i][0][1])
+    pix = BigFloat(match[i][1][0])
+    piy = BigFloat(match[i][1][1])
+    cix = BigFloat(match[i][0][0])
+    ciy = BigFloat(match[i][0][1])
     ki  = pix ** 2 + piy ** 2 + L ** 2
 
     res = res + (((cix * pix + cix * piy) / ki - 1) * (cix * piy - ciy * pix))
 
   return res
+
+def getDeterminant(mat):
+  a = mat[0][0]
+  b = mat[0][1]
+  c = mat[0][2]
+  d = mat[1][0]
+  e = mat[1][1]
+  f = mat[1][2]
+  g = mat[2][0]
+  h = mat[2][1]
+  i = mat[2][2]
+
+  return a * e * i + b * f * g + c * d * h - c * e * g - f * h * a - i * b * d
+
+def invertMatrix(mat):
+  a = mat[0][0]
+  b = mat[0][1]
+  c = mat[0][2]
+  d = mat[1][0]
+  e = mat[1][1]
+  f = mat[1][2]
+  g = mat[2][0]
+  h = mat[2][1]
+  i = mat[2][2]
+
+  array = np.array([[e * i - f * h, c * h - b * i, b * f - c * e],
+                    [f * g - d * i, a * i - c * g, c * d - a * f],
+                    [d * h - e * g, b * g - a * h, a * e - b * d]])
+
+  return array / getDeterminant(mat)
 
 def getA(match):
   return np.array([[getA11(match), getA12(match), getA13(match)],
@@ -233,35 +264,36 @@ def getB(match):
                    [getB2(match)],
                    [getB3(match)]])
 
-def floatMatrixToDecimal(mat):
-  M = [[[Decimal(0), Decimal(0), Decimal(0)] for i in range(len(mat[0]))] for j in range(len(mat))]
+def floatMatrixToBigFloat(mat):
+  M = [[[BigFloat(0), BigFloat(0), BigFloat(0)] for i in range(len(mat[0]))] for j in range(len(mat))]
 
   for i in range(len(mat)):
     for j in range(len(mat[0])):
-      M[i][j] = Decimal(mat[i][j])
+      M[i][j] = BigFloat(mat[i][j])
 
   return M
 
 def getQmin(match):
   A = getA(match)
   B = getB(match)
-  A = np.linalg.matrix_power(A, -1)
+  #A = np.linalg.matrix_power(A, -1)
+  A = invertMatrix(A)
   A = -A
-  A = floatMatrixToDecimal(A)
+  A = floatMatrixToBigFloat(A)
 
   return np.dot(A, B)
 
 def runScanMatching(ref, new, q):
   match = []
   tmp   = []
-  qmin  = (Decimal(q[0]), Decimal(q[1]), Decimal(q[2]))
+  qmin  = (BigFloat(q[0]), BigFloat(q[1]), BigFloat(q[2]))
 
   for i in range(100):
     tmp = list(new)
     applyQList(tmp, qmin)
     match = matchPoints(ref, tmp, new)
     qmin = getQmin(match)
-    qmin[2] = radmodDecimal(qmin[2])
+    qmin[2] = radmodBigFloat(qmin[2])
     print qmin
 
   return qmin
