@@ -276,10 +276,8 @@ def floatMatrixToBigFloat(mat):
 def getQmin(match):
   A = getA(match)
   B = getB(match)
-  #A = np.linalg.matrix_power(A, -1)
   A = invertMatrix(A)
   A = -A
-  A = floatMatrixToBigFloat(A)
 
   return np.dot(A, B)
 
