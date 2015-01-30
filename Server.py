@@ -1,4 +1,5 @@
 import socket, sys, threading
+import Trigo
 
 class Server:
   def __init__(self, host, port):

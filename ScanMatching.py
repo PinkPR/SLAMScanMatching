@@ -1,9 +1,9 @@
 import math
 from decimal import *
-from bigfloat import *
 import numpy as np
 import Ransac
 import Trigo
+import copy
 
 L = 3
 PI = math.pi
@@ -20,15 +20,15 @@ def norma((x, y)):
 def radmod(angle):
   return math.fmod(2 * PI + math.fmod(angle, 2 * PI), 2 * PI)
 
-def radmodBigFloat(angle):
-  return (BigFloat(2 * PI) + (angle % BigFloat(2 * PI))) % BigFloat(2 * PI)
+#def radmodangle(angle):
+  #return (2 * PI) + (angle % 2 * PI))) % 2 * PI)
 
 def isOnSegment(C, (A, B)):
   AC = vector(A, C)
   CB = vector(C, B)
   AB = vector(A, B)
 
-  if (norma(AC) + norma(CB) == norma(AB)):
+  if (norma(AC) + norma(CB) >= norma(AB) * 0.95 or norma(AC) + norma(CB) <= norma(AB) * 1.05):
     return True
   else:
     return False
@@ -76,28 +76,30 @@ def matchPoints(ref, new, new2):
 
   return result
 
-def applyQ((xa, ya), (x, y, theta)):
-  xa = xa + float(x)
-  ya = ya + float(y)
+def applyQ(point, q):
+  #xa = xa + float(x)
+  #ya = ya + float(y)
 
-  xa, ya = Trigo.cartToAng((xa, ya))
-  ya     = radmod(ya + float(theta))
+  #xa, ya = Trigo.cartToAng((xa, ya))
+  #ya     = radmod(ya + float(theta))
 
-  return Trigo.angToCart((xa, ya))
+  #return Trigo.angToCart((xa, ya))
+  return (q[0] + math.cos(q[2]) * point[0] - math.sin(q[2]) * point[1],
+          q[1] + math.sin(q[2]) * point[0] + math.cos(q[2]) * point[1])
 
 def applyQList(points, (x, y, theta)):
   for i in range(len(points)):
     points[i] = applyQ(points[i], (x, y, theta))
 
 def getA11(match):
-  res = BigFloat(0)
-  k = BigFloat(0)
+  res = 0
+  k   = 0
 
   for i in range(len(match)):
-    pix = BigFloat(match[i][1][0])
-    piy = BigFloat(match[i][1][1])
-    cix = BigFloat(match[i][0][0])
-    ciy = BigFloat(match[i][0][1])
+    pix = match[i][1][0]
+    piy = match[i][1][1]
+    cix = match[i][0][0]
+    ciy = match[i][0][1]
     ki  = pix ** 2 + piy ** 2 + L ** 2
 
     res = res + (1 - piy ** 2 / ki)
@@ -105,14 +107,14 @@ def getA11(match):
   return res
 
 def getA12(match):
-  res = BigFloat(0)
-  k = BigFloat(0)
+  res = 0
+  k = 0
 
   for i in range(len(match)):
-    pix = BigFloat(match[i][1][0])
-    piy = BigFloat(match[i][1][1])
-    cix = BigFloat(match[i][0][0])
-    ciy = BigFloat(match[i][0][1])
+    pix = match[i][1][0]
+    piy = match[i][1][1]
+    cix = match[i][0][0]
+    ciy = match[i][0][1]
     ki  = pix ** 2 + piy ** 2 + L ** 2
 
     res = res + (pix * piy / ki)
@@ -120,14 +122,14 @@ def getA12(match):
   return res
 
 def getA13(match):
-  res = BigFloat(0)
-  k = BigFloat(0)
+  res = 0
+  k   = 0
 
   for i in range(len(match)):
-    pix = BigFloat(match[i][1][0])
-    piy = BigFloat(match[i][1][1])
-    cix = BigFloat(match[i][0][0])
-    ciy = BigFloat(match[i][0][1])
+    pix = match[i][1][0]
+    piy = match[i][1][1]
+    cix = match[i][0][0]
+    ciy = match[i][0][1]
     ki  = pix ** 2 + piy ** 2 + L ** 2
 
     res = res + (-ciy + (cix * pix + ciy * piy) * piy / ki)
@@ -135,14 +137,14 @@ def getA13(match):
   return res
 
 def getA22(match):
-  res = BigFloat(0)
-  k = BigFloat(0)
+  res = 0
+  k   = 0
 
   for i in range(len(match)):
-    pix = BigFloat(match[i][1][0])
-    piy = BigFloat(match[i][1][1])
-    cix = BigFloat(match[i][0][0])
-    ciy = BigFloat(match[i][0][1])
+    pix = match[i][1][0]
+    piy = match[i][1][1]
+    cix = match[i][0][0]
+    ciy = match[i][0][1]
     ki  = pix ** 2 + piy ** 2 + L ** 2
 
     res = res + (1 - pix ** 2 / ki)
@@ -150,14 +152,14 @@ def getA22(match):
   return res
 
 def getA23(match):
-  res = BigFloat(0)
-  k = BigFloat(0)
+  res = 0
+  k   = 0
 
   for i in range(len(match)):
-    pix = BigFloat(match[i][1][0])
-    piy = BigFloat(match[i][1][1])
-    cix = BigFloat(match[i][0][0])
-    ciy = BigFloat(match[i][0][1])
+    pix = match[i][1][0]
+    piy = match[i][1][1]
+    cix = match[i][0][0]
+    ciy = match[i][0][1]
     ki  = pix ** 2 + piy ** 2 + L ** 2
 
     res = res + (cix - (cix * pix + ciy * piy) * pix / ki)
@@ -165,14 +167,14 @@ def getA23(match):
   return res
 
 def getA33(match):
-  res = BigFloat(0)
-  k = BigFloat(0)
+  res = 0
+  k   = 0
 
   for i in range(len(match)):
-    pix = BigFloat(match[i][1][0])
-    piy = BigFloat(match[i][1][1])
-    cix = BigFloat(match[i][0][0])
-    ciy = BigFloat(match[i][0][1])
+    pix = match[i][1][0]
+    piy = match[i][1][1]
+    cix = match[i][0][0]
+    ciy = match[i][0][1]
     ki  = pix ** 2 + piy ** 2 + L ** 2
 
     res = res + (cix ** 2 + ciy ** 2 - ((cix * pix + ciy * piy) ** 2) / ki)
@@ -180,14 +182,14 @@ def getA33(match):
   return res
 
 def getB1(match):
-  res = BigFloat(0)
-  k = BigFloat(0)
+  res = 0
+  k = 0
 
   for i in range(len(match)):
-    pix = BigFloat(match[i][1][0])
-    piy = BigFloat(match[i][1][1])
-    cix = BigFloat(match[i][0][0])
-    ciy = BigFloat(match[i][0][1])
+    pix = match[i][1][0]
+    piy = match[i][1][1]
+    cix = match[i][0][0]
+    ciy = match[i][0][1]
     ki  = pix ** 2 + piy ** 2 + L ** 2
 
     res = res + (cix - pix - (cix * piy - ciy * pix) * piy / ki)
@@ -195,14 +197,14 @@ def getB1(match):
   return res
 
 def getB2(match):
-  res = BigFloat(0)
-  k = BigFloat(0)
+  res = 0
+  k = 0
 
   for i in range(len(match)):
-    pix = BigFloat(match[i][1][0])
-    piy = BigFloat(match[i][1][1])
-    cix = BigFloat(match[i][0][0])
-    ciy = BigFloat(match[i][0][1])
+    pix = match[i][1][0]
+    piy = match[i][1][1]
+    cix = match[i][0][0]
+    ciy = match[i][0][1]
     ki  = pix ** 2 + piy ** 2 + L ** 2
 
     res = res + (ciy - piy - (cix * piy - ciy * pix) * pix / ki)
@@ -210,14 +212,14 @@ def getB2(match):
   return res
 
 def getB3(match):
-  res = BigFloat(0)
-  k = BigFloat(0)
+  res = 0
+  k   = 0
 
   for i in range(len(match)):
-    pix = BigFloat(match[i][1][0])
-    piy = BigFloat(match[i][1][1])
-    cix = BigFloat(match[i][0][0])
-    ciy = BigFloat(match[i][0][1])
+    pix = match[i][1][0]
+    piy = match[i][1][1]
+    cix = match[i][0][0]
+    ciy = match[i][0][1]
     ki  = pix ** 2 + piy ** 2 + L ** 2
 
     res = res + (((cix * pix + cix * piy) / ki - 1) * (cix * piy - ciy * pix))
@@ -264,14 +266,16 @@ def getB(match):
                    [getB2(match)],
                    [getB3(match)]])
 
-def floatMatrixToBigFloat(mat):
-  M = [[[BigFloat(0), BigFloat(0), BigFloat(0)] for i in range(len(mat[0]))] for j in range(len(mat))]
+"""
+def floatMatrixTomat:
+  M = [[[0), 0), 0)] for i in range(len(mat[0]))] for j in range(len(mat))]
 
   for i in range(len(mat)):
     for j in range(len(mat[0])):
-      M[i][j] = BigFloat(mat[i][j])
+      M[i][j] = mat[i][j]
 
   return M
+"""
 
 def getQmin(match):
   A = getA(match)
@@ -281,17 +285,25 @@ def getQmin(match):
 
   return np.dot(A, B)
 
+def deepCopy(lst):
+  nlst = []
+
+  for i in range(len(lst)):
+    nlst.append(copy.copy(lst[0]))
+
+  return nlst
+
 def runScanMatching(ref, new, q):
   match = []
   tmp   = []
-  qmin  = (BigFloat(q[0]), BigFloat(q[1]), BigFloat(q[2]))
+  qmin  = (q[0], q[1], q[2])
 
   for i in range(100):
-    tmp = list(new)
-    applyQList(tmp, qmin)
+    tmp = deepCopy(new)
+    applyQList(tmp, (float(qmin[0]), float(qmin[1]), float(qmin[2])))
     match = matchPoints(ref, tmp, new)
     qmin = getQmin(match)
-    qmin[2] = radmodBigFloat(qmin[2])
+    qmin[2] = radmod(qmin[2])
     print qmin
 
   return qmin
